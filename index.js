@@ -35,17 +35,27 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   let id = req.params._id;
   let exerciseData = req.body;
   exerciseData._id = id;
-  let result = await exerciseController.insertExercise(exerciseData);
+  let resultUser = await userController.getUserByIDToObject(id);
+  exerciseData.username = resultUser.username;
+  let { description, duration, date } = (await exerciseController.insertExercise(exerciseData)).toObject();
+  let result = { ...resultUser, description, duration, 'date':  date.toDateString() };
+  // console.log(result);
   res.send(result);
 });
 
 app.get('/api/users/:_id/logs', async (req, res) => {
   let userID = req.params._id;
   let from = (Boolean(req.query.from)) ? new Date(req.query.from).getTime() : 0;
-  let to = (Boolean(req.query.to)) ? new Date(req.query.to).getTime() : Number.MAX_SAFE_INTEGER;
+  let to = (Boolean(req.query.to)) ? new Date(req.query.to).getTime() : new Date(9999, 11, 31).getTime();
   let limit = parseInt(req.query.limit || '0');
-  let resultExcs = await exerciseController.readAndCountAllExercisesByUserID(userID,from,to,limit);
-  let resultUser = await userController.getUserByID(userID);
+  let resultUser = await userController.getUserByIDToObject(userID);
+  let resultExcs = await exerciseController.readAndCountAllExercisesByUserID(resultUser.username, from, to, limit);
+  for (let exc of resultExcs.log) {
+    exc.date = new Date(exc.date).toDateString();
+  }
+  console.log(from+"--> "+to + " <<" + limit+ ">>");
+  console.log(resultUser);
+  console.log(resultExcs);
   let concatedResult = { ...resultUser, ...resultExcs };
   res.send(concatedResult);
 });

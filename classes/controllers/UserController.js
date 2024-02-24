@@ -14,10 +14,10 @@ async function getAllUsers() {
     return await User.User.find({});
 }
 
-async function getUserByID(id_) {
+async function getUserByIDToObject(id_) {
     let user_ = await User.User.findOne({ _id: id_ });
     let { username, _id } = user_.toObject({ versionKey: false });
     return { username, _id };
 }
 
-module.exports = { insertUser , getAllUsers, getUserByID};
+module.exports = { insertUser , getAllUsers, getUserByIDToObject};
